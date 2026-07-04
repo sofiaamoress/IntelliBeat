@@ -1,0 +1,240 @@
+package reglas
+
+//list any import classes here.
+import java.util.Arrays;
+import ecg.*;
+
+//declare any global variables here
+global EditorFicheros editorFichero;
+global EditorFicheros editorFicheroTotal;
+
+// hacer una regla sola para el primer ciclo
+// hacer una regla que añada el inicial y meta las ondas y compruebe que la onda tiene numCiclo máximo de lo sque tenemos para seguir 
+rule "Inicializa Max"
+	agenda-group "crearDatos"
+	salience 20
+	when
+		not Max() //cuando aún no hay ningún objeto Max en la memoria.
+	then
+		Max max = new Max(0);
+		insert(max);
+end
+
+rule "Calcular número de ciclo"
+	agenda-group "crearDatos"
+	salience 15
+	when
+		$max : Max($valor_max : max)
+		$p: OndaP(refCiclo.getNumCiclo() == 0) //me quedo con cualquier ondaP que tenga numciclo=0
+		not (OndaP(refCiclo.getNumCiclo() == 0, inicio < $p.getInicio())) //ademas compruebo que su inicio es el menor de entre todas las ondaP 
+		$q: OndaQ(refCiclo.getNumCiclo() == 0)
+		not (OndaQ(refCiclo.getNumCiclo() == 0, inicio < $q.getInicio()))
+		$r: OndaR(refCiclo.getNumCiclo() == 0)
+		not (OndaR(refCiclo.getNumCiclo() == 0, inicio < $r.getInicio()))
+		$s: OndaS(refCiclo.getNumCiclo() == 0)
+		not (OndaS(refCiclo.getNumCiclo() == 0, inicio < $s.getInicio()))
+		$t: OndaT(refCiclo.getNumCiclo() == 0)
+		not (OndaT(refCiclo.getNumCiclo() == 0, inicio < $t.getInicio()))
+	then 
+		Ciclo nuevo_ciclo = new Ciclo($valor_max +1); //creo un nuevo ciclo con el valor del maximo + 1, lo que seria el nuevo numCiclo
+		insert(nuevo_ciclo);                         //lo inserto a la bh
+		modify($p) {
+			setRefCiclo(nuevo_ciclo);                 //modifico las ondas con ese nuevo numCiclo
+		};
+		modify($q) {
+			setRefCiclo(nuevo_ciclo); 
+		};
+		modify($r) {
+			setRefCiclo(nuevo_ciclo); 
+		};
+		modify($s) {
+			setRefCiclo(nuevo_ciclo); 
+		};
+		modify($t) {
+			setRefCiclo(nuevo_ciclo);
+		};
+		modify($max) {                            //modifico el maximo
+			setMax($valor_max +1); 
+		};	
+end
+
+rule "Calcular número de ciclo sin onda T"
+	agenda-group "crearDatos"
+	salience 13
+	when
+		$max : Max($valor_max : max)
+		$p: OndaP(refCiclo.getNumCiclo() == 0) //me quedo con cualquier ondaP que tenga numciclo=0
+		not (OndaP(refCiclo.getNumCiclo() == 0, inicio < $p.getInicio())) //ademas compruebo que su inicio es el 
+																		  //menor de entre todas las ondaP 
+		$q: OndaQ(refCiclo.getNumCiclo() == 0)
+		not (OndaQ(refCiclo.getNumCiclo() == 0, inicio < $q.getInicio()))
+		$r: OndaR(refCiclo.getNumCiclo() == 0)
+		not (OndaR(refCiclo.getNumCiclo() == 0, inicio < $r.getInicio()))
+		$s: OndaS(refCiclo.getNumCiclo() == 0)
+		not (OndaS(refCiclo.getNumCiclo() == 0, inicio < $s.getInicio()))
+	then 
+		Ciclo nuevo_ciclo = new Ciclo($valor_max +1); //creo un nuevo ciclo con el valor del maximo + 1, 
+													  //lo que seria el nuevo numCiclo
+		insert(nuevo_ciclo);                          //lo inserto a la bh
+		modify($p) {
+			setRefCiclo(nuevo_ciclo);                 //modifico las ondas con ese nuevo numCiclo
+		};
+		modify($q) {
+			setRefCiclo(nuevo_ciclo); 
+		};
+		modify($r) {
+			setRefCiclo(nuevo_ciclo); 
+		};
+		modify($s) {
+			setRefCiclo(nuevo_ciclo); 
+		};
+		modify($max) {                            //modifico el maximo
+			setMax($valor_max +1); 
+		};	
+end
+
+rule "Crear intervalo QT"
+	agenda-group "crearDatos"
+	salience 10
+	when
+		$q: OndaQ()
+		$t: OndaT(refCiclo == $q.refCiclo)
+		not IntervaloQT(refCiclo == $q.refCiclo) // compruebo que no hay ya un intervalo creado con ese refciclo
+	then 
+		int inicio = $q.getInicio();
+		int fin = $t.getFin();
+		IntervaloQT iQT = new IntervaloQT($q.getRefCiclo(), inicio, fin, $q, $t);
+		insert(iQT);
+end
+
+rule "Crear segmento ST"
+	agenda-group "crearDatos"
+	salience 10
+	when
+		$s: OndaS()
+		$t: OndaT(refCiclo == $s.refCiclo)
+		not SegmentoST(refCiclo == $s.refCiclo) // compruebo que no hay ya un segmento creado con ese refciclo
+	then 
+		int inicio = $s.getFin();
+		int fin = $t.getInicio();
+		SegmentoST sST = new SegmentoST($s.getRefCiclo(), inicio, fin, $s, $t);
+		insert(sST);
+end
+
+rule "Crear complejo QRS"
+	agenda-group "crearDatos"
+	salience 10
+	when
+		$q: OndaQ()
+		$r: OndaR(refCiclo == $q.refCiclo)
+		$s: OndaS(refCiclo == $q.refCiclo)
+		not ComplejoQRS (refCiclo == $q.refCiclo) //compruebo que no hay un complejoQRS ya creado con ese refciclo
+	then 
+		int inicio = $q.getInicio();
+		int fin = $s.getFin();
+		ComplejoQRS cQRS = new ComplejoQRS($q.getRefCiclo(), inicio, fin, $q, $r, $s);
+		insert(cQRS);
+end
+
+rule "Calcular frecuencia cardiaca"
+	agenda-group "crearDatos"
+	salience -10
+	when
+		Max ($ciclo: max) //me  quedo con el último ciclo y lo guardo en $ciclo
+		OndaP(refCiclo.getNumCiclo() == $ciclo, $inicio : inicio);
+	then
+		float ciclosFloat = (float) $ciclo;
+		float maxTiempoFloat = (float) $inicio;
+		int frecuencia = (int) Math.round((ciclosFloat/(maxTiempoFloat/1000))*60);
+		FrecuenciaCardiaca frecuenciaCardiaca = new FrecuenciaCardiaca(frecuencia);
+		insert(frecuenciaCardiaca);
+end 
+
+
+
+rule "Detectar taquicardia"
+	agenda-group "detectarEnfermedades"
+    when
+        $fc : FrecuenciaCardiaca(valorFrecuencia >= 100)
+    then
+        insert(new Enfermedad(Enfermedades.TAQUICARDIA, 
+        "La frecuencia cardiaca es: " + $fc.getValorFrecuencia() + "."));
+end
+
+rule "Detectar bradicardia"
+	agenda-group "detectarEnfermedades"
+    when
+        $fc : FrecuenciaCardiaca(valorFrecuencia < 60) 
+    then
+        insert(new Enfermedad(Enfermedades.BRADICARDIA, 
+        "La frecuencia cardiaca es: " + $fc.getValorFrecuencia() + "."));
+end
+
+rule "Detectar hipocalcemia"
+	agenda-group "detectarEnfermedades"
+    when
+        $iQT : IntervaloQT(fin - inicio > 440) 
+        not Enfermedad(getEnfermedad() == Enfermedades.HIPOCALCEMIA)
+    then
+    	insert(new Enfermedad(Enfermedades.HIPOCALCEMIA, 
+    	"El intervalo QT del ciclo " + $iQT.getRefCiclo().getNumCiclo() + " tiene una duración mayor de 440 milisegundos."));
+end
+
+rule "Detectar IAM"
+	agenda-group "detectarEnfermedades"
+    when
+        $sST : SegmentoST(refOndaT.getPico() >= 2) 
+        not Enfermedad(getEnfermedad() == Enfermedades.IAM)
+    then
+    	insert(new Enfermedad(Enfermedades.IAM, 
+    	"El nivel del segmento ST del ciclo " + $sST.getRefCiclo().getNumCiclo() + " es superior a 2."));
+end
+
+rule "Detectar hipopotasemia"
+	agenda-group "detectarEnfermedades"
+	when
+		$t : OndaT(pico <= -13)
+        not Enfermedad(getEnfermedad() == Enfermedades.HIPOPOTASEMIA)
+    then
+    	insert(new Enfermedad(Enfermedades.HIPOPOTASEMIA, 
+    	"El intervalo QT del ciclo " + $t.getRefCiclo().getNumCiclo() + " tiene una duración mayor de 440 y el pico de la onda T es casi plano con un valor de " + $t.getPico() + "."));
+end
+
+rule "Detectar isquemia coronaria"
+	agenda-group "detectarEnfermedades"
+    when
+        $t : OndaT(pico <= -0.5)
+        not Enfermedad(getEnfermedad() == Enfermedades.ISQUEMIA_CORONARIA)
+    then
+    	insert(new Enfermedad(Enfermedades.ISQUEMIA_CORONARIA, 
+    	"La onda T del ciclo " + $t.getRefCiclo().getNumCiclo() + " está invertida (pico negativo de " + $t.getPico() + ")."));
+end
+
+rule "Detectar contracción ventricular prematura"
+	agenda-group "detectarEnfermedades"
+    when
+        $cQRS : ComplejoQRS(fin - inicio < 90)
+        not Enfermedad(getEnfermedad() == Enfermedades.CONTRACCION_VENTRICULAR_PREMATURA)
+    then
+        insert(new Enfermedad(Enfermedades.CONTRACCION_VENTRICULAR_PREMATURA, 
+        "En el ciclo " + $cQRS.getRefCiclo().getNumCiclo() + " se ve que el complejo tiene origen supraventricular."));
+end
+
+rule "Ninguna enfermedad detectada"
+	agenda-group "detectarEnfermedades"
+	salience -10 
+    when
+        not Enfermedad()
+    then
+        insert(new Enfermedad(Enfermedades.NORMAL, 
+        "No se ha detectado ninguna anomalía."));
+end
+
+rule "Report de las enfermedades"
+    agenda-group "crearReport"
+    when 
+        $e : Enfermedad()
+    then
+        editorFichero.anadirDiagnostico($e.getEnfermedad() + " " + $e.getDiagnostico());
+        editorFicheroTotal.anadirDiagnostico($e.getEnfermedad() + " " + $e.getDiagnostico());
+end
