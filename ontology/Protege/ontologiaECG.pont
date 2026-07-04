@@ -1,0 +1,255 @@
+; Thu Nov 20 18:44:52 CET 2025
+; 
+;+ (version "3.4.8")
+;+ (build "Build 629")
+
+
+(defclass %3ACLIPS_TOP_LEVEL_SLOT_CLASS "Fake class to save top-level slot information"
+	(is-a USER)
+	(role abstract)
+	(single-slot diagnostico
+;+		(comment "Almacena la información relativa a cómo se diagnosticó y en qué ciclo una enfermedad.")
+		(type STRING)
+;+		(cardinality 0 1)
+		(create-accessor read-write))
+	(multislot enfermedades
+;+		(comment "Representa las enfermedades que puede tener el paciente.")
+		(type SYMBOL)
+		(allowed-values TAQUICARDIA BRADICARDIA HIPOCALCEMIA HIPOPOTASEMIA ISQUEMIA_CORONARIA CONTRACCION_VENTRICULAR_PREMATURA IAM NORMAL)
+		(create-accessor read-write))
+	(single-slot numeroCiclo
+;+		(comment "Represneta el número de ciclo actual.")
+		(type INTEGER)
+		(range 1 %3FVARIABLE)
+;+		(cardinality 1 1)
+		(create-accessor read-write))
+	(single-slot refCiclo
+;+		(comment "Representa una referencia al ciclo actual.")
+		(type INSTANCE)
+;+		(allowed-classes Ciclo)
+;+		(cardinality 1 1)
+		(create-accessor read-write))
+	(single-slot inicio
+;+		(comment "Representa el comienzo de la onda.")
+		(type INTEGER)
+;+		(cardinality 1 1)
+		(create-accessor read-write))
+	(single-slot fin
+;+		(comment "Representa el final de la onda.")
+		(type INTEGER)
+;+		(cardinality 1 1)
+		(create-accessor read-write))
+	(single-slot frecuencia
+;+		(comment "Representa el número de veces que el corazón late en la duración del electrocardiograma.")
+		(type INTEGER)
+		(range 1 %3FVARIABLE)
+;+		(cardinality 1 1)
+		(create-accessor read-write))
+	(single-slot refOndaS
+;+		(comment "Representa una referencia a la onda actual S.")
+		(type INSTANCE)
+;+		(allowed-classes OndaS)
+;+		(cardinality 1 1)
+		(create-accessor read-write))
+	(single-slot refOndaT
+;+		(comment "Representa una referencia a la onda actual T.")
+		(type INSTANCE)
+;+		(allowed-classes OndaT)
+;+		(cardinality 1 1)
+		(create-accessor read-write))
+	(single-slot refOndaQ
+;+		(comment "Representa una referencia a la onda actual Q.")
+		(type INSTANCE)
+;+		(allowed-classes OndaQ)
+;+		(cardinality 1 1)
+		(create-accessor read-write))
+	(single-slot pico
+;+		(comment "Representa el valor máximo o mínimo que alcanza la onda.")
+		(type FLOAT)
+;+		(cardinality 1 1)
+		(create-accessor read-write))
+	(single-slot refOndaR
+;+		(comment "Representa una referencia a la onda actual R.")
+		(type INSTANCE)
+;+		(allowed-classes OndaR)
+;+		(cardinality 1 1)
+		(create-accessor read-write)))
+
+(defclass DatosCiclo "El ciclo se compone de ondas, agrupadas en complejos e intervalos. Sin embargo, no se relacionan con ciclo mediante es-un. He ahí la función de esta jerarquía: agrupar estos datos y tenerlos nivel de abstracción correcto, respetando la relación es-un."
+	(is-a USER)
+	(role abstract)
+	(single-slot refCiclo
+;+		(comment "Representa una referencia al ciclo actual.")
+		(type INSTANCE)
+;+		(allowed-classes Ciclo)
+;+		(cardinality 1 1)
+		(create-accessor read-write)))
+
+(defclass Onda "Una onda es un evento eléctrico, un impulso eléctrico a través del corazón (notese que esto es distinto que la contracción y relajación del corazón). Un ciclo o latido está compuesto de cinco ondas, seguidas de una más pequeña con la que no trataremos\nhttps://es.wikipedia.org/wiki/Electrocardiograma#El_ECG_normal"
+	(is-a DatosCiclo)
+	(role abstract)
+	(single-slot inicio
+;+		(comment "Representa el comienzo de la onda.")
+		(type INTEGER)
+;+		(cardinality 1 1)
+		(create-accessor read-write))
+	(single-slot fin
+;+		(comment "Representa el final de la onda.")
+		(type INTEGER)
+;+		(cardinality 1 1)
+		(create-accessor read-write))
+	(single-slot pico
+;+		(comment "Representa el valor máximo o mínimo que alcanza la onda.")
+		(type FLOAT)
+;+		(cardinality 1 1)
+		(create-accessor read-write)))
+
+(defclass OndaP "Primera onda de un latido cardíaco, la que marca el comienzo de este. Usualmente con señal eléctrica positiva.\nhttps://es.wikipedia.org/wiki/Electrocardiograma#Onda_P"
+	(is-a Onda)
+	(role concrete))
+
+(defclass OndaQ "Segunda onda de un latido cardíaco, primera del complejo QRS y del intervalo QT. Usualmente con señal eléctrica negativa.\nhttps://es.wikipedia.org/wiki/Electrocardiograma#Complejo_QRS"
+	(is-a Onda)
+	(role concrete))
+
+(defclass OndaT "Quinta onda de un latido cardíaco y para nuestra ontología, la última. Usualmente con señal eléctrica positiva.\nhttps://es.wikipedia.org/wiki/Electrocardiograma#Onda_T"
+	(is-a Onda)
+	(role concrete))
+
+(defclass OndaR "Tercera onda de un latido cardíaco y segunda del complejo QRS. Usualmente con señal eléctrica positiva.\nhttps://es.wikipedia.org/wiki/Electrocardiograma#Complejo_QRS"
+	(is-a Onda)
+	(role concrete))
+
+(defclass OndaS "Cuarta onda de un latido cardíaco y última del complejo QRS. Usualmente con señal eléctrica negativa.\nhttps://es.wikipedia.org/wiki/Electrocardiograma#Complejo_QRS"
+	(is-a Onda)
+	(role concrete))
+
+(defclass Complejo "Agrupación de ondas de un mismo ciclo, el único complejo con el que trabajamos según nuestras fuentes médicas es con el complejo QRS.\nhttps://es.wikipedia.org/wiki/Electrocardiograma#El_ECG_normal\nhttps://en.wikipedia.org/w/index.php?title=Electrocardiography&oldid=513556137#Waves_and_intervals"
+	(is-a DatosCiclo)
+	(role abstract)
+	(single-slot inicio
+;+		(comment "Representa el comienzo de la onda.")
+		(type INTEGER)
+;+		(cardinality 1 1)
+		(create-accessor read-write))
+	(single-slot fin
+;+		(comment "Representa el final de la onda.")
+		(type INTEGER)
+;+		(cardinality 1 1)
+		(create-accessor read-write)))
+
+(defclass ComplejoQRS "Complejo concreto conformado por las ondas Q, R, S."
+	(is-a Complejo)
+	(role concrete)
+	(single-slot refOndaS
+;+		(comment "Representa una referencia a la onda actual S.")
+		(type INSTANCE)
+;+		(allowed-classes OndaS)
+;+		(cardinality 1 1)
+		(create-accessor read-write))
+	(single-slot refOndaQ
+;+		(comment "Representa una referencia a la onda actual Q.")
+		(type INSTANCE)
+;+		(allowed-classes OndaQ)
+;+		(cardinality 1 1)
+		(create-accessor read-write))
+	(single-slot refOndaR
+;+		(comment "Representa una referencia a la onda actual R.")
+		(type INSTANCE)
+;+		(allowed-classes OndaR)
+;+		(cardinality 1 1)
+		(create-accessor read-write)))
+
+(defclass Intervalo "Las ondas también se suelen agrupar en intervalos para facilitar ciertos diagnósticos que requieren datos de varias de ellas. \nhttps://en.wikipedia.org/w/index.php?title=Electrocardiography&oldid=513556137#Waves_and_intervals"
+	(is-a DatosCiclo)
+	(role abstract)
+	(single-slot inicio
+;+		(comment "Representa el comienzo de la onda.")
+		(type INTEGER)
+;+		(cardinality 1 1)
+		(create-accessor read-write))
+	(single-slot fin
+;+		(comment "Representa el final de la onda.")
+		(type INTEGER)
+;+		(cardinality 1 1)
+		(create-accessor read-write)))
+
+(defclass IntervaloQT "Agrupación de las ondas desde la Q hasta la T. Es un intervalo de tiempo que incluye las ondas Q, R, S y T de un mismo ciclo."
+	(is-a Intervalo)
+	(role concrete)
+	(single-slot refOndaT
+;+		(comment "Representa una referencia a la onda actual T.")
+		(type INSTANCE)
+;+		(allowed-classes OndaT)
+;+		(cardinality 1 1)
+		(create-accessor read-write))
+	(single-slot refOndaQ
+;+		(comment "Representa una referencia a la onda actual Q.")
+		(type INSTANCE)
+;+		(allowed-classes OndaQ)
+;+		(cardinality 1 1)
+		(create-accessor read-write)))
+
+(defclass Segmento
+	(is-a DatosCiclo)
+	(role abstract)
+	(single-slot inicio
+;+		(comment "Representa el comienzo de la onda.")
+		(type INTEGER)
+;+		(cardinality 1 1)
+		(create-accessor read-write))
+	(single-slot fin
+;+		(comment "Representa el final de la onda.")
+		(type INTEGER)
+;+		(cardinality 1 1)
+		(create-accessor read-write)))
+
+(defclass SegmentoST "Agrupación de las ondas desde el fin de la onda S hasta el inicio de la onda T."
+	(is-a Segmento)
+	(role concrete)
+	(single-slot refOndaS
+;+		(comment "Representa una referencia a la onda actual S.")
+		(type INSTANCE)
+;+		(allowed-classes OndaS)
+;+		(cardinality 1 1)
+		(create-accessor read-write))
+	(single-slot refOndaT
+;+		(comment "Representa una referencia a la onda actual T.")
+		(type INSTANCE)
+;+		(allowed-classes OndaT)
+;+		(cardinality 1 1)
+		(create-accessor read-write)))
+
+(defclass FrecuenciaCardiaca "Frecuencia cardíaca obtenida a partir del número de ciclos leídos por el electrocardiograma y su duración."
+	(is-a USER)
+	(role concrete)
+	(single-slot frecuencia
+;+		(comment "Representa el número de veces que el corazón late en la duración del electrocardiograma.")
+		(type INTEGER)
+		(range 1 %3FVARIABLE)
+;+		(cardinality 1 1)
+		(create-accessor read-write)))
+
+(defclass Ciclo "Representación de un ciclo, que viene a ser un latido del corazón. Llamamos ciclo al conjunto formado por las ondas P, Q, R, S, T, que se pueden agrupar en intervalos o en ciclos. Comunmente se expresa como onda P, complejo QRS y onda T.\nhttps://es.wikipedia.org/wiki/Electrocardiograma#El_ECG_normal"
+	(is-a USER)
+	(role concrete)
+	(single-slot numeroCiclo
+;+		(comment "Represneta el número de ciclo actual.")
+		(type INTEGER)
+		(range 1 %3FVARIABLE)
+;+		(cardinality 1 1)
+		(create-accessor read-write)))
+
+(defclass Enfermedad "Enfermedades detectadas en función de los datos obtenidos del electrocardiograma. Para relacionarlos con los posibles diagnósticos utilizamos las siguientes referencias:\nhttps://en.wikipedia.org/w/index.php?title=Electrocardiography&oldid=513556137#Some_pathological_patterns_which_can_be_seen_on_the_ECG\nhttp://www.bem.fi/book/19/19.htm"
+	(is-a USER)
+	(role concrete)
+	(single-slot diagnostico
+;+		(comment "Almacena la información relativa a cómo se diagnosticó y en qué ciclo una enfermedad.")
+		(type STRING)
+;+		(cardinality 0 1)
+		(create-accessor read-write))
+	(multislot enfermedades
+;+		(comment "Representa las enfermedades que puede tener el paciente.")
+		(type SYMBOL)
+		(allowed-values TAQUICARDIA BRADICARDIA HIPOCALCEMIA HIPOPOTASEMIA ISQUEMIA_CORONARIA CONTRACCION_VENTRICULAR_PREMATURA IAM NORMAL)
+		(create-accessor read-write)))

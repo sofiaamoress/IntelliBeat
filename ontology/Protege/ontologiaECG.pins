@@ -1,0 +1,148 @@
+; Thu Nov 20 18:44:52 CET 2025
+; 
+;+ (version "3.4.8")
+;+ (build "Build 629")
+
+([ComplejoQRS] of  %3ASTANDARD-CLASS
+
+	(%3ASLOT-CONSTRAINTS [ontologiaECG_Class10004]))
+
+([FrecuenciaCardiaca] of  %3ASTANDARD-CLASS
+
+	(%3ASLOT-CONSTRAINTS [ontologiaECG_Class10006]))
+
+([Intervalo] of  %3ASTANDARD-CLASS
+
+	(%3ASLOT-CONSTRAINTS [ontologiaECG_Class10002]))
+
+([Onda] of  %3ASTANDARD-CLASS
+
+	(%3ASLOT-CONSTRAINTS [ontologiaECG_Class10000]))
+
+([OndaQ] of  %3ASTANDARD-CLASS
+
+	(%3ASLOT-CONSTRAINTS [ontologiaECG_Class10005]))
+
+([ontologiaECG_Class0] of  Ciclo
+
+	(numeroCiclo 1))
+
+([ontologiaECG_Class1] of  ComplejoQRS
+
+	(fin 280)
+	(inicio 190)
+	(refCiclo [ontologiaECG_Class0])
+	(refOndaQ [ontologiaECG_Class4])
+	(refOndaR [ontologiaECG_Class5])
+	(refOndaS [ontologiaECG_Class6]))
+
+([ontologiaECG_Class10] of  Enfermedad
+
+	(enfermedades BRADICARDIA))
+
+([ontologiaECG_Class10000] of  %3APAL-CONSTRAINT
+
+	(%3APAL-DESCRIPTION "El inicio de la onda es menor que el fin de la onda.")
+	(%3APAL-NAME "InicioMenorFinOnda")
+	(%3APAL-RANGE "(defrange ?onda :FRAME Onda)")
+	(%3APAL-STATEMENT "(forall ?onda\n        (=> (and (own-slot-not-null inicio ?onda)\n                 (own-slot-not-null fin ?onda))\n               (< (inicio ?onda) (fin ?onda))\n        )\n)"))
+
+([ontologiaECG_Class10001] of  %3APAL-CONSTRAINT
+
+	(%3APAL-DESCRIPTION "El inicio del complejo es menor que el fin del complejo.")
+	(%3APAL-NAME "InicioMenorFinComplejo")
+	(%3APAL-RANGE "(defrange ?complejo :FRAME Complejo)")
+	(%3APAL-STATEMENT "(forall ?complejo\n        (=> (and (own-slot-not-null inicio ?complejo)\n                 (own-slot-not-null fin ?complejo))\n              (< (inicio ?complejo) (fin ?complejo))\n        )\n)"))
+
+([ontologiaECG_Class10002] of  %3APAL-CONSTRAINT
+
+	(%3APAL-DESCRIPTION "El inicio del intervalo es menor que el fin del intervalo.")
+	(%3APAL-NAME "InicioMenorFinIntervalo")
+	(%3APAL-RANGE "(defrange ?onda :FRAME Intervalo)")
+	(%3APAL-STATEMENT "(forall ?intervalo\n        (=> (and (own-slot-not-null inicio ?intervalo)\n                 (own-slot-not-null fin ?intervalo))\n               (< (inicio ?intervalo) (fin ?intervalo))\n        )\n)"))
+
+([ontologiaECG_Class10003] of  %3APAL-CONSTRAINT
+
+	(%3APAL-DESCRIPTION "El complejo está formado por la onda Q, onda R y onda S.")
+	(%3APAL-NAME "CompuestoPorTresOndas")
+	(%3APAL-RANGE "(defrange ?qrs :FRAME ComplejoQRS)")
+	(%3APAL-STATEMENT "(forall ?qrs\n        (=> (and (slot-not-null refOndaQ ?qrs)\n                 (slot-not-null refOndaR ?qrs)\n                 (slot-not-null refOndaS ?qrs))\n            (and (instance-of refOndaQ ?qrs OndaQ)\n                 (instance-of refOndaR ?qrs OndaR)\n                 (instance-of refOndaS ?qrs OndaS))))\n"))
+
+([ontologiaECG_Class10004] of  %3APAL-CONSTRAINT
+
+	(%3APAL-DESCRIPTION "La duración del complejo QRS es menor o igual a 120 milisegundos.")
+	(%3APAL-NAME "DuraciónComplejo")
+	(%3APAL-RANGE "(defrange ?qrs :FRAME ComplejoQRS)")
+	(%3APAL-STATEMENT "(forall ?qrs\n        (=> (and (own-slot-not-null inicio ?qrs)\n                 (own-slot-not-null fin ?qrs))\n               (<= (- (fin ?qrs) (inicio ?qrs)) 120)\n        )\n)"))
+
+([ontologiaECG_Class10005] of  %3APAL-CONSTRAINT
+
+	(%3APAL-DESCRIPTION "La duración de la onda Q es menor de 40 milisegundos.")
+	(%3APAL-NAME "DuraciónOndaQ")
+	(%3APAL-RANGE "(defrange ?ondaQ :FRAME OndaQ)")
+	(%3APAL-STATEMENT "(forall ?ondaQ\n        (=> (and (own-slot-not-null inicio ?ondaQ)\n                       (own-slot-not-null fin ?ondaQ))\n              (< (- (fin ?ondaQ) (inicio ?ondaQ)) 40)\n        )\n)\n"))
+
+([ontologiaECG_Class10006] of  %3APAL-CONSTRAINT
+
+	(%3APAL-DESCRIPTION "La frecuencia cardiaca debe ser positiva.")
+	(%3APAL-NAME "FrecuenciaPositiva")
+	(%3APAL-RANGE "(defrange ?fc :FRAME FrecuenciaCardiaca)")
+	(%3APAL-STATEMENT "(forall ?fc\n        (=> (own-slot-not-null frecuencia ?fc)\n              (> (frecuencia ?fc) 0)\n        )\n)"))
+
+([ontologiaECG_Class11] of  FrecuenciaCardiaca
+
+	(frecuencia 44))
+
+([ontologiaECG_Class20002] of  SegmentoST
+
+	(fin 420)
+	(inicio 280)
+	(refCiclo [ontologiaECG_Class0])
+	(refOndaS [ontologiaECG_Class6])
+	(refOndaT [ontologiaECG_Class7]))
+
+([ontologiaECG_Class20003] of  OndaQ
+)
+
+([ontologiaECG_Class3] of  OndaP
+
+	(fin 100)
+	(inicio 0)
+	(pico 0.27989623)
+	(refCiclo [ontologiaECG_Class0]))
+
+([ontologiaECG_Class4] of  OndaQ
+
+	(fin 220)
+	(inicio 190)
+	(pico -0.070103765)
+	(refCiclo [ontologiaECG_Class0]))
+
+([ontologiaECG_Class5] of  OndaR
+
+	(fin 250)
+	(inicio 220)
+	(pico 3.0298963)
+	(refCiclo [ontologiaECG_Class0]))
+
+([ontologiaECG_Class6] of  OndaS
+
+	(fin 280)
+	(inicio 250)
+	(pico -1.0298963)
+	(refCiclo [ontologiaECG_Class0]))
+
+([ontologiaECG_Class7] of  OndaT
+
+	(fin 590)
+	(inicio 420)
+	(pico 0.37989622)
+	(refCiclo [ontologiaECG_Class0]))
+
+([ontologiaECG_Class8] of  IntervaloQT
+
+	(fin 590)
+	(inicio 190)
+	(refCiclo [ontologiaECG_Class0])
+	(refOndaQ [ontologiaECG_Class4])
+	(refOndaT [ontologiaECG_Class7]))
